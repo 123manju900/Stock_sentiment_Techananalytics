@@ -1,5 +1,6 @@
-# Technanalytics---R2
-# Sentiment Analysis and Stock Prediction Pipeline
+# Sentiment Analysis and Stock Prediction Pipeline - Techanalytics ( IIT Banaras)
+This markdown is the documentation for Techanalytics Round 2 case. The dataset contains the tweets text and sentiment as `binary (0 or 1 )`. We were suppose to model the tweets using NLP techniques and predict the model for sentiments 
+
 
 ## **1. Data Preparation and Cleaning**
 - **Objective**: Prepare the dataset for analysis by removing noise and ensuring consistency.
@@ -10,7 +11,10 @@
     - URLs using regex (`re.sub(r"http\S+", "", text)`).
     - Special characters and extra spaces.
     - Converted text to lowercase.
+    - converting `mn` to `millions`
   - Removed stopwords using NLTK's `stopwords.words('english')`.
+ 
+  Below is a basic code outline on how we removed them as a part of data cleaning process 
     
 - **Code**:
 
@@ -27,15 +31,20 @@ lambda x: " ".join([word for word in word_tokenize(x) if word not in stop_words]
 )
 ```
 
-- **Output**: A new column `cleaned_text` containing processed text.
+- The **output** is stored in a new column **`cleaned_text`** containing processed text.
 
 ---
+# **Extract Relevant Information**
+
+As a part of information extraction we have applied techniques like **`NER`** and **`SVO`** and **`regular expressions`** to effectively extract information and use dependency parsing to aggragate sentiments and used sentiment propogation to links sentiments to extracts from tweets
 
 ## **2. Named Entity Recognition (NER)**
-- **Objective**: Identify key entities such as company names, financial metrics, and product mentions.
-- **Steps**:
-- Used SpaCy's `en_core_web_sm` model to extract entities like organizations, dates, monetary values, and percentages.
+- **Goal**: Identify key entities such as company names, financial metrics, and product mentions.
+**Steps**:
+- Used **SpaCy's** `en_core_web_sm` model to extract entities like `organizations, dates, monetary values, and percentages`.
 - Stored extracted entities in the `entities` column.
+Below is code excerpt from text extraction process
+
 - **Code**:
 
 ```python
@@ -47,7 +56,7 @@ return [(ent.text, ent.label_) for ent in doc.ents]
 data['entities'] = data['cleaned_text'].apply(extract_entities)
 ```
 
-- **Output**: A new column `entities` containing lists of identified entities.
+- The **output** is a  new column `entities` containing lists of identified entities.
 
 ---
 
@@ -77,30 +86,18 @@ data['svo_relationships'] = data['cleaned_text'].apply(extract_svo)
 
 ---
 
-## **4. Sentiment Analysis**
-- **Objective**: Analyze sentiment associated with entities and their context.
-- **Steps**:
-- Initially used FinBERT but reverted to dataset-provided binary sentiment labels due to low accuracy (~58%).
+## **4. Sentiment Analysis- Initial plan**
+Initially we tried using **FinBERT** to analyze sentiment associated with entities and their context.
+-But we reverted to dataset-provided binary sentiment labels due to low accuracy (~58%).
 - Linked sentiments to specific entities using dependency parsing results.
-- **Code**:
 
-
-```python
-def map_entity_sentiments(row):
-entity_sentiments = []
-for entity in row['entities']:
-entity_sentiments.append((entity, entity1, row['Sentiment']))
-return entity_sentiments
-data['entity_sentiments'] = data.apply(map_entity_sentiments, axis=1)
-```
-- **Output**: A new column `entity_sentiments` linking entities with sentiment scores.
-
----
 
 ## **5. Regex-Based Financial Metric Extraction**
-- **Objective**: Extract structured financial metrics such as amounts and percentages from text.
-- **Steps**:
+- **Goal** : From the `SVO` we couldn't extract all the metrics, so along with that we extracted structured financial metrics such as amounts and percentages from text using regex. 
 - Applied regex patterns to identify monetary values (e.g., "EUR 13.1 mn") and percentages (e.g., "5%").
+
+- Below is the code to extract financial metrics 
+
 - **Code**:
 ```python
 def extract_financial_metrics(text):
@@ -110,12 +107,12 @@ return {"amounts": amounts, "percentages": percentages}
 data['regex_extraction'] = data['cleaned_text'].apply(extract_financial_metrics)
 ```
 
-- **Output**: A new column `regex_extraction` containing extracted financial metrics.
+- The **output** is a new column `regex_extraction` containing extracted financial metrics.
 
 ---
-
+# **Analyse Sentiment and Semantic Relationships**
 ## **6. Semantic Graph Construction**
-- **Objective**: Build semantic graphs to visualize relationships between entities, sentiments, and financial metrics.
+- We built semantic graphs to visualize relationships between entities, sentiments, and financial metrics.
 - **Steps**:
 - Nodes: Represented entities, financial metrics, and sentiments.
 - Edges: Captured relationships based on co-occurrence or SVO triples.
@@ -139,7 +136,7 @@ data['semantic_graph'] = data.apply(build_graph, axis=1)
 ---
 
 ## **7. Sentiment Propagation**
-- **Objective**: Propagate sentiment across connected nodes in the graph.
+- To propagate sentiment across connected nodes in the graph.
 - **Steps**:
 - Nodes without sentiment inherited an average sentiment from their neighbors.
 - **Code**:
@@ -186,7 +183,7 @@ data['stock_category'] = data.apply(categorize_stock, axis=1)
 ```
 
 - **Output**: A new column `stock_category` with predicted categories.
-
+# **Predict Stock Category Impacts**
 ---
 
 ## Conclusion
