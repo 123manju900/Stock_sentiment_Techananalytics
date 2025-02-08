@@ -165,12 +165,20 @@ lambda row: propagate_sentiment(row['semantic_graph'], row['entity_sentiments'])
 ---
 
 ## **8. Stock Category Prediction**
-- **Objective**: Predict stock categories based on sentiment scores and financial metrics.
-- **Steps**:
-- Defined stock categories using rules based on sentiment and financial metrics (e.g., High Growth Potential).
+- Predict stock categories based on sentiment scores and financial metrics.
+
+- Based on sentiment scores and financial metrics, we categorized stocks into:
+
+- **High Growth Potential:** Strong positive sentiment & financials
+
+- **Neutral:** Moderate sentiment or missing financial indicators
+
+- **High Risk:** Negative sentiment & weak financials
+
 - **Code**:
 
 ```python
+##Example classification code 
 def categorize_stock(row):
 avg_sentiment = sum([sent for _, _, sent in row['entity_sentiments']]) / len(row['entity_sentiments'])
 if avg_sentiment > 0.5 and len(row['regex_extraction']['amounts']) > threshold:
@@ -182,10 +190,54 @@ return "High Risk"
 data['stock_category'] = data.apply(categorize_stock, axis=1)
 ```
 
-- **Output**: A new column `stock_category` with predicted categories.
-# **Predict Stock Category Impacts**
+- A new column `stock_category` with predicted categories.
+
+---
+## 9. Fueling the Machine: Feature Engineering
+
+To train a predictive model, we needed to convert our data into numerical features. We engineered features from three primary sources:
+
+**Textual Features**: Converted the cleaned text data into numerical vectors using CountVectorizer, capturing word frequencies.
+
+**Financial Metrics:** Extracted and counted the amounts and percentages identified by our regex patterns.
+
+**Graph Properties:** Calculated centrality scores (e.g., degree centrality, betweenness centrality) for each node in the semantic graphs. Centrality measures identify influential nodes within the network. 
+![image](https://github.com/123manju900/Stock_sentiment_Techananalytics/blob/05287df00c437ec40897264b8d171ba0a332e060/Graphs%20and%20code/Top_entities.png)
+
 ---
 
+# **Predict Stock Category Impacts**
+## Using the modeled data for ML prediction 
+We trained a **Random Forest Classifier** to predict stock categories using:
+
+- Textual Features (Vectorized text from CountVectorizer)
+
+- Financial Metrics (Counts of extracted amounts/percentages)
+
+- Graph Properties (Node centrality scores)
+
+**Model Training**
+  ```python
+  from sklearn.ensemble import RandomForestClassifier
+  clf = RandomForestClassifier()
+  clf.fit(X_train, y_train)
+  ```
+
+---
+
+## **Model Metrics** 
+Evaluation Metrics: We evaluated the model's performance using accuracy, precision, recall, and F1-score.
+
+And Below are the metrics for the model 
+
+```
+   Metric     Score
+0  Accuracy  0.917857
+1  Precision  0.954193
+2  Recall  0.956420
+3  F1-Score  0.955305
+```
+![image](https://github.com/123manju900/Stock_sentiment_Techananalytics/blob/05287df00c437ec40897264b8d171ba0a332e060/Graphs%20and%20code/model_performance.png)
 ## Conclusion
 This pipeline effectively transforms raw tweet data into actionable insights by integrating NLP techniques (NER, dependency parsing), semantic graph analysis, and machine learning-based predictions. The results provide a comprehensive framework for analyzing financial sentiment and predicting stock market impacts.
 
